@@ -15,21 +15,30 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import org.generation.italy.model.Libro;
 
 
 public class Main {
-
+	//dichiaro le variabili comuni a tutti i metodi
+	static String url = "jdbc:mysql://localhost:3306/biblioteca"; // stringa di connessione 
+	static String username="root";
+	static String password="jaita101";
+	
+	
 	public static void main(String[] args) {
 		ArrayList<Libro> elencoLibri = new ArrayList<Libro>();
-		String url = "jdbc:mysql://localhost:3306/biblioteca"; // stringa di connessione (in questo caso per MySql, ma
+		
 		Libro l;											// potrebbe essere diversa per altre tipologie di DBMS)
-
+		String scelta;
+		Scanner sc=new Scanner(System.in);
+		int righeInserite;
+		
 		String sql;
 		// caricamento libri
 		sql = "SELECT * FROM libri INNER JOIN autori on libri.id_autore=autori.id INNER JOIN generi on libri.id_genere=generi.id";
-		try (Connection conn = DriverManager.getConnection(url, "root", "jaita101")) { // provo a connettermi
+		try (Connection conn = DriverManager.getConnection(url, username, password)) { // provo a connettermi
 			try (PreparedStatement ps = conn.prepareStatement(sql)) { // provo a creare l'istruzione sql
 				try (ResultSet rs = ps.executeQuery()) { // il ResultSet mi consente di scorrere il risultato della
 															// SELECT una riga alla volta
@@ -49,8 +58,66 @@ public class Main {
 					}
 				}
 			}
-			for (Libro lib:elencoLibri)
-				System.out.println(lib.toString());
+			
+			do {
+				System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n**** GESTIONE BIBLIOTECA *****\n");
+				System.out.println("1. Inserimento nuovo libro");
+				System.out.println("2. Visualizzazione libri");
+				System.out.println("3. Cancellazione libro");
+				System.out.println("4. Modifica libro");				
+		
+				
+				System.out.println("5. Esci");
+
+				System.out.print("\n\nInserisci la tua scelta: ");
+				scelta = sc.nextLine();
+				switch(scelta) {
+				case "1":	//inserimento
+					l=new Libro();
+					System.out.println("NUOVO LIBRO");
+					System.out.print("Titolo: ");
+					l.titolo=sc.nextLine();
+					System.out.print("Anno pubblicazione: ");
+					l.annoPubblicazione=sc.nextInt();
+					sc.nextLine();
+					System.out.print("Id autore: ");
+					l.idAutore=sc.nextInt();
+					l.autore=cercaPerId(l.idAutore, "autori", "nome"); //cerco il nome dell'autore con quell'id
+					//verifica (domani)
+					sc.nextLine();
+					System.out.print("Id genere: ");
+					l.idGenere=sc.nextInt();
+					sc.nextLine();
+					righeInserite= inserisciLibro(l);	//inserisce nel DB
+					if (righeInserite==1) {
+						System.out.println("Libro correttamente inserito");
+						elencoLibri.add(l);
+					}
+					else		//non dovrebbe mai succedere
+						System.out.println("Libro non correttamente inserito");
+					
+					break;
+				case "2":	//visualizzazione
+					for (Libro lib:elencoLibri)
+						System.out.println(lib.toString());
+					break;
+				case "3":	//cancellazione
+					break;
+				case "4":	//modifica
+					break;
+				case "5":	//esci
+					System.out.println("Arrivederci!");
+					break;
+				default:	//tutti gli altri casi
+					System.out.println("Scelta non valida!");
+				}
+				
+				System.out.println("Premi invio per continuare...");
+				sc.nextLine();
+				
+			} while (!scelta.equals("5"));
+			
+			
 		}
 		catch (Exception e) {	//catch che gestisce tutti i tipi di eccezione (deve essere l'ultimo catch)
 			//si è verificato un problema. L'oggetto e (di tipo Exception) contiene informazioni sull'errore verificatosi
@@ -61,5 +128,55 @@ public class Main {
 			
 		}
 	}
-
+	
+	static int inserisciLibro(Libro l) {
+		String sql;
+		int righeInserite=0;
+		// inserimento libro
+		sql = "INSERT INTO libri(titolo, anno_pubblicazione, id_autore, id_genere) "
+				+ "VALUES (?, ?, ?, ?)";
+		try (Connection conn = DriverManager.getConnection(url, username, password)) { // provo a connettermi
+			try (PreparedStatement ps = conn.prepareStatement(sql)) { // provo a creare l'istruzione sql
+				ps.setString(1, l.titolo);
+				ps.setInt(2, l.annoPubblicazione);
+				ps.setInt(3, l.idAutore);
+				ps.setInt(4, l.idGenere);
+				righeInserite=ps.executeUpdate();	//eseguo l'sql				
+			}
+		}
+		catch (Exception e) {	//catch che gestisce tutti i tipi di eccezione (deve essere l'ultimo catch)
+			//si è verificato un problema. L'oggetto e (di tipo Exception) contiene informazioni sull'errore verificatosi
+			
+			System.err.println("Si è verificato un errore: "+e.getMessage());
+			//System.err.println("Stacktrace:");
+			//e.printStackTrace();
+			
+		}
+		return righeInserite;
+	}
+	
+	static String cercaPerId(int id, String nomeTabella, String campoDescrizione) {
+		String sql = "SELECT "+ campoDescrizione+ " FROM "+ nomeTabella + " WHERE id="+id;
+		String ris="";
+		try (Connection conn = DriverManager.getConnection(url, username, password)) { // provo a connettermi
+			try (PreparedStatement ps = conn.prepareStatement(sql)) { // provo a creare l'istruzione sql
+				try (ResultSet rs = ps.executeQuery()) { // il ResultSet mi consente di scorrere il risultato della
+															// SELECT una riga alla volta
+					if (rs.next())
+						ris= rs.getString(campoDescrizione);					
+				}
+			}
+			
+		}
+		catch (Exception e) {	//catch che gestisce tutti i tipi di eccezione (deve essere l'ultimo catch)
+			//si è verificato un problema. L'oggetto e (di tipo Exception) contiene informazioni sull'errore verificatosi
+			
+			System.err.println("Si è verificato un errore: "+e.getMessage());
+			//System.err.println("Stacktrace:");
+			//e.printStackTrace();
+			
+		}
+		return ris;
+	}
+	
 }
