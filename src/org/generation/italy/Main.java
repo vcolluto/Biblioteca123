@@ -80,20 +80,35 @@ public class Main {
 					System.out.print("Anno pubblicazione: ");
 					l.annoPubblicazione=sc.nextInt();
 					sc.nextLine();
-					System.out.print("Id autore: ");
-					l.idAutore=sc.nextInt();
-					l.autore=cercaPerId(l.idAutore, "autori", "nome"); //cerco il nome dell'autore con quell'id
-					//verifica (domani)
-					sc.nextLine();
-					System.out.print("Id genere: ");
-					l.idGenere=sc.nextInt();
-					sc.nextLine();
+					do {
+						System.out.print("Id autore: ");
+						l.idAutore=sc.nextInt();
+						sc.nextLine();
+						l.autore=cercaPerId(l.idAutore, "autori", "CONCAT(nome,' ',cognome)", "nominativo"); //cerco il nome dell'autore con quell'id
+						if (!l.autore.isEmpty())
+							System.out.println("Autore: "+l.autore);
+						else
+							System.out.println("Autore non trovato. Ripetere l'inserimento");
+					} while (l.autore.isEmpty());					
+				
+					
+					do {
+						System.out.print("Id genere: ");
+						l.idGenere=sc.nextInt();
+						sc.nextLine();
+						l.genere=cercaPerId(l.idGenere, "generi", "nome", "nome"); //cerco il nome del genere con quell'id
+						if (!l.genere.isEmpty())
+							System.out.println("Genere: "+l.genere);
+						else
+							System.out.println("Genere non trovato. Ripetere l'inserimento");
+					} while (l.genere.isEmpty());
+					
 					righeInserite= inserisciLibro(l);	//inserisce nel DB
 					if (righeInserite==1) {
 						System.out.println("Libro correttamente inserito");
 						elencoLibri.add(l);
 					}
-					else		//non dovrebbe mai succedere
+					else		
 						System.out.println("Libro non correttamente inserito");
 					
 					break;
@@ -155,15 +170,16 @@ public class Main {
 		return righeInserite;
 	}
 	
-	static String cercaPerId(int id, String nomeTabella, String campoDescrizione) {
-		String sql = "SELECT "+ campoDescrizione+ " FROM "+ nomeTabella + " WHERE id="+id;
+	static String cercaPerId(int id, String nomeTabella, String campoDescrizione, String alias) {
+		String sql = "SELECT "+ campoDescrizione+ " AS "+ alias +" FROM "+ nomeTabella + " WHERE id="+id;
 		String ris="";
+		//System.out.println(sql);
 		try (Connection conn = DriverManager.getConnection(url, username, password)) { // provo a connettermi
 			try (PreparedStatement ps = conn.prepareStatement(sql)) { // provo a creare l'istruzione sql
 				try (ResultSet rs = ps.executeQuery()) { // il ResultSet mi consente di scorrere il risultato della
 															// SELECT una riga alla volta
 					if (rs.next())
-						ris= rs.getString(campoDescrizione);					
+						ris= rs.getString(alias);					
 				}
 			}
 			
