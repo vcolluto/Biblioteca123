@@ -15,6 +15,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Scanner;
 
 import org.generation.italy.model.Libro;
@@ -32,7 +33,7 @@ public class Main {
 		String scelta;
 		Scanner sc = new Scanner(System.in);
 		int righeInteressate, idLibro;
-
+		caricaLibri(elencoLibri);
 		do {
 			System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n**** GESTIONE BIBLIOTECA *****\n");
 			System.out.println("1. Inserimento nuovo libro");
@@ -110,16 +111,35 @@ public class Main {
 				
 				do {
 					System.out.print("Id: ");
-					idLibro = sc.nextInt();
+					final int idL = sc.nextInt();
 					sc.nextLine();
+					/*
+					//cerco il libro con quell'id (versione "classica")
 					l = null;
 					for (Libro lib:elencoLibri)
-						if (lib.id==idLibro)
+						if (lib.id==idL)
 							l=lib;
 					if (l!=null)
 						System.out.println(l.toString());
 					else
 						System.out.println("Libro non trovato. Reinserire");
+					
+					*/
+					
+					
+					//cerco il libro con quell'id (versione con funzioni lambda)					
+					Optional<Libro> ris=
+						elencoLibri.stream().filter(lib -> lib.id==idL ).findFirst();
+					if (ris.isPresent()) {						
+						l=ris.get();	
+						System.out.println(l.toString());
+					}						
+					else {
+						System.out.println("Libro non trovato. Reinserire");
+						l=null;
+					}
+					
+					
 				} while (l==null);
 				
 				
