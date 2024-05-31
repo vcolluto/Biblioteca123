@@ -33,7 +33,7 @@ public class Main {
 		Libro l;											// potrebbe essere diversa per altre tipologie di DBMS)
 		String scelta;
 		Scanner sc=new Scanner(System.in);
-		int righeInserite;
+		int righeInteressate, idLibro;
 		
 		String sql;
 		// caricamento libri
@@ -103,8 +103,8 @@ public class Main {
 							System.out.println("Genere non trovato. Ripetere l'inserimento");
 					} while (l.genere.isEmpty());
 					
-					righeInserite= inserisciLibro(l);	//inserisce nel DB
-					if (righeInserite==1) {
+					righeInteressate= inserisciLibro(l);	//inserisce nel DB
+					if (righeInteressate==1) {
 						System.out.println("Libro correttamente inserito");
 						elencoLibri.add(l);
 					}
@@ -117,6 +117,23 @@ public class Main {
 						System.out.println(lib.toString());
 					break;
 				case "3":	//cancellazione
+					System.out.println("CANCELLAZIONE LIBRO");
+					System.out.print("Id: ");
+					idLibro=sc.nextInt();
+					sc.nextLine();
+					righeInteressate=eliminaLibro(idLibro);	//elimino dal database
+					if (righeInteressate==1) {
+						System.out.println("Libro correttamente eliminato");
+						//elimino anche dall'arraylist
+						l=null;
+						for(Libro lib:elencoLibri)	//cerco il libro con quell'id
+							if (lib.id==idLibro)
+								l=lib;
+						if (l!=null)	//se l'ho trovato lo elimino
+							elencoLibri.remove(l);
+					}
+					else		
+						System.out.println("Libro non correttamente eliminato");
 					break;
 				case "4":	//modifica
 					break;
@@ -168,6 +185,31 @@ public class Main {
 			
 		}
 		return righeInserite;
+	}
+	
+	
+	static int eliminaLibro(int id) {
+		String sql;
+		int righeEliminate=0;
+		// eliminazione libro
+		sql = "DELETE FROM libri WHERE id=? ";
+			
+		try (Connection conn = DriverManager.getConnection(url, username, password)) { // provo a connettermi
+			try (PreparedStatement ps = conn.prepareStatement(sql)) { // provo a creare l'istruzione sql
+				ps.setInt(1, id);
+				
+				righeEliminate=ps.executeUpdate();	//eseguo l'sql				
+			}
+		}
+		catch (Exception e) {	//catch che gestisce tutti i tipi di eccezione (deve essere l'ultimo catch)
+			//si è verificato un problema. L'oggetto e (di tipo Exception) contiene informazioni sull'errore verificatosi
+			
+			System.err.println("Si è verificato un errore: "+e.getMessage());
+			//System.err.println("Stacktrace:");
+			//e.printStackTrace();
+			
+		}
+		return righeEliminate;
 	}
 	
 	static String cercaPerId(int id, String nomeTabella, String campoDescrizione, String alias) {
