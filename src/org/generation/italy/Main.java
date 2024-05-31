@@ -111,7 +111,7 @@ public class Main {
 				
 				do {
 					System.out.print("Id: ");
-					final int idL = sc.nextInt();
+					int idLib = sc.nextInt();
 					sc.nextLine();
 					/*
 					//cerco il libro con quell'id (versione "classica")
@@ -129,7 +129,7 @@ public class Main {
 					
 					//cerco il libro con quell'id (versione con funzioni lambda)					
 					Optional<Libro> ris=
-						elencoLibri.stream().filter(lib -> lib.id==idL ).findFirst();
+						elencoLibri.stream().filter(lib -> lib.id==idLib ).findFirst();
 					if (ris.isPresent()) {						
 						l=ris.get();	
 						System.out.println(l.toString());
