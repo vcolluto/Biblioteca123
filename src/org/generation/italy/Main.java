@@ -105,6 +105,64 @@ public class Main {
 					System.out.println("Libro non correttamente eliminato");
 				break;
 			case "4": // modifica
+				
+				System.out.println("MODIFICA LIBRO");
+				
+				do {
+					System.out.print("Id: ");
+					idLibro = sc.nextInt();
+					sc.nextLine();
+					l = null;
+					for (Libro lib:elencoLibri)
+						if (lib.id==idLibro)
+							l=lib;
+					if (l!=null)
+						System.out.println(l.toString());
+					else
+						System.out.println("Libro non trovato. Reinserire");
+				} while (l==null);
+				
+				
+				
+				System.out.print("Titolo: ");
+				l.titolo = sc.nextLine();
+				System.out.print("Anno pubblicazione: ");
+				l.annoPubblicazione = sc.nextInt();
+				sc.nextLine();
+				do {
+					System.out.print("Id autore: ");
+					l.idAutore = sc.nextInt();
+					sc.nextLine();
+					l.autore = cercaPerId(l.idAutore, "autori", "CONCAT(nome,' ',cognome)", "nominativo"); // cerco il
+																											// nome
+																											// dell'autore
+																											// con
+																											// quell'id
+					if (!l.autore.isEmpty())
+						System.out.println("Autore: " + l.autore);
+					else
+						System.out.println("Autore non trovato. Ripetere l'inserimento");
+				} while (l.autore.isEmpty());
+
+				do {
+					System.out.print("Id genere: ");
+					l.idGenere = sc.nextInt();
+					sc.nextLine();
+					l.genere = cercaPerId(l.idGenere, "generi", "nome", "nome"); // cerco il nome del genere con
+																					// quell'id
+					if (!l.genere.isEmpty())
+						System.out.println("Genere: " + l.genere);
+					else
+						System.out.println("Genere non trovato. Ripetere l'inserimento");
+				} while (l.genere.isEmpty());
+
+				righeInteressate = modificaLibro(l); // modifica nel DB
+				if (righeInteressate == 1) {
+					System.out.println("Libro correttamente modificato");
+					// elencoLibri.add(l);
+				} else
+					System.out.println("Libro non correttamente modificato");				
+				
 				break;
 			case "5": // esci
 				System.out.println("Arrivederci!");
@@ -143,6 +201,33 @@ public class Main {
 
 		}
 		return righeInserite;
+	}
+	
+	
+	static int modificaLibro(Libro l) {
+		String sql;
+		int righeAggiornate = 0;
+		// modifica libro
+		sql = "UPDATE libri set titolo=?, anno_pubblicazione=?, id_autore=?, id_genere=? WHERE id=? ";
+		try (Connection conn = DriverManager.getConnection(url, username, password)) { // provo a connettermi
+			try (PreparedStatement ps = conn.prepareStatement(sql)) { // provo a creare l'istruzione sql
+				ps.setString(1, l.titolo);
+				ps.setInt(2, l.annoPubblicazione);
+				ps.setInt(3, l.idAutore);
+				ps.setInt(4, l.idGenere);
+				ps.setInt(5, l.id);
+				righeAggiornate = ps.executeUpdate(); // eseguo l'sql
+			}
+		} catch (Exception e) { // catch che gestisce tutti i tipi di eccezione (deve essere l'ultimo catch)
+			// si è verificato un problema. L'oggetto e (di tipo Exception) contiene
+			// informazioni sull'errore verificatosi
+
+			System.err.println("Si è verificato un errore: " + e.getMessage());
+			// System.err.println("Stacktrace:");
+			// e.printStackTrace();
+
+		}
+		return righeAggiornate;
 	}
 
 	static int eliminaLibro(int id) {
